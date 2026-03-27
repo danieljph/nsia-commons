@@ -1,0 +1,432 @@
+databaseChangeLog:
+- changeSet:
+    id: DP-0001-1_00_initiateTag
+    author: daniel
+    changes:
+    - tagDatabase:
+        tag: DP-0001-1
+- changeSet:
+    id: DP-0001-1_01_createType-acquirer_status
+    author: daniel
+    changes:
+    - sql:
+        sql: >
+          CREATE TYPE "acquirer_status" AS ENUM ('ACTIVE', 'INACTIVE', 'DELETED');
+          COMMENT ON TYPE "acquirer_status" IS 'Enumeration for acquirer status.';
+    rollback:
+    - sql:
+        sql: DROP TYPE "acquirer_status" CASCADE;
+- changeSet:
+    id: DP-0001-1_02_createType-merchant_status
+    author: daniel
+    changes:
+    - sql:
+        sql: >
+          CREATE TYPE "merchant_status" AS ENUM ('ACTIVE', 'INACTIVE', 'DELETED');
+          COMMENT ON TYPE "merchant_status" IS 'Enumeration for merchant status.';
+    rollback:
+    - sql:
+        sql: DROP TYPE "merchant_status" CASCADE;
+- changeSet:
+    id: DP-0001-1_03_createType-register_status
+    author: daniel
+    changes:
+    - sql:
+        sql: >
+          CREATE TYPE "register_status" AS ENUM ('ACTIVE', 'INACTIVE', 'DELETED');
+          COMMENT ON TYPE "register_status" IS 'Enumeration for register status.';
+    rollback:
+    - sql:
+        sql: DROP TYPE "register_status" CASCADE;
+- changeSet:
+    id: DP-0001-1_04_createType-inquiry_status
+    author: daniel
+    changes:
+    - sql:
+        sql: >
+          CREATE TYPE "inquiry_status" AS ENUM ('SUCCESS', 'FAILED', 'USED');
+          COMMENT ON TYPE "inquiry_status" IS 'Enumeration for inquiry status.';
+    rollback:
+    - sql:
+        sql: DROP TYPE "inquiry_status" CASCADE;
+- changeSet:
+    id: DP-0001-1_05_createType-payment_status
+    author: daniel
+    changes:
+    - sql:
+        sql: >
+          CREATE TYPE "payment_status" AS ENUM ('SUCCESS', 'FAILED');
+          COMMENT ON TYPE "payment_status" IS 'Enumeration for payment status.';
+    rollback:
+    - sql:
+        sql: DROP TYPE "payment_status" CASCADE;
+- changeSet:
+    id: DP-0001-1_06_createTable-acquirer
+    author: daniel
+    changes:
+    - createTable:
+        tableName: acquirer
+        columns:
+        - column:
+            name: id
+            type: BIGINT
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+              primaryKeyName: pk_acquirer
+              nullable: false
+        - column:
+            name: name
+            type: VARCHAR(128)
+            constraints:
+              nullable: false
+        - column:
+            name: client_id
+            type: VARCHAR(32)
+            constraints:
+              nullable: false
+        - column:
+            name: client_secret
+            type: VARCHAR(256)
+            constraints:
+              nullable: false
+        - column:
+            name: status
+            type: acquirer_status
+            constraints:
+              nullable: false
+        - column:
+            name: created_date
+            type: TIMESTAMP WITH TIME ZONE
+            defaultValueComputed: CURRENT_TIMESTAMP
+        - column:
+            name: updated_date
+            type: TIMESTAMP WITH TIME ZONE
+- changeSet:
+    id: DP-0001-1_07_createTable-merchant
+    author: daniel
+    changes:
+    - createTable:
+        tableName: merchant
+        columns:
+        - column:
+            name: id
+            type: BIGINT
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+              primaryKeyName: pk_merchant
+              nullable: false
+        - column:
+            name: name
+            type: VARCHAR(128)
+            constraints:
+              nullable: false
+        - column:
+            name: client_id
+            type: VARCHAR(32)
+            constraints:
+              nullable: false
+        - column:
+            name: client_secret
+            type: VARCHAR(256)
+            constraints:
+              nullable: false
+        - column:
+            name: status
+            type: merchant_status
+            constraints:
+              nullable: false
+        - column:
+            name: created_date
+            type: TIMESTAMP WITH TIME ZONE
+            defaultValueComputed: CURRENT_TIMESTAMP
+        - column:
+            name: updated_date
+            type: TIMESTAMP WITH TIME ZONE
+- changeSet:
+    id: DP-0001-1_08_createTable-register
+    author: daniel
+    changes:
+    - createTable:
+        tableName: register
+        columns:
+        - column:
+            name: id
+            type: BIGINT
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+              primaryKeyName: pk_register
+              nullable: false
+        - column:
+            name: merchant_id
+            type: BIGINT
+            constraints:
+              nullable: false
+              foreignKeyName: fk_register_x_merchant
+              references: merchant(id)
+        - column:
+            name: invoice_number
+            type: VARCHAR(64)
+            constraints:
+              nullable: false
+        - column:
+            name: virtual_account_number
+            type: VARCHAR(28)
+            constraints:
+              nullable: false
+        - column:
+            name: virtual_account_name
+            type: VARCHAR(255)
+            constraints:
+              nullable: false
+        - column:
+            name: virtual_account_email
+            type: VARCHAR(255)
+            constraints:
+              nullable: true
+        - column:
+            name: virtual_account_phone
+            type: VARCHAR(30)
+            constraints:
+              nullable: true
+        - column:
+            name: amount
+            type: NUMERIC(16, 2)
+            constraints:
+              nullable: false
+        - column:
+            name: currency
+            type: VARCHAR(3)
+            constraints:
+              nullable: false
+        - column:
+            name: additional_info
+            type: JSONB
+            constraints:
+              nullable: true
+        - column:
+            name: status
+            type: register_status
+            constraints:
+              nullable: false
+        - column:
+            name: created_date
+            type: TIMESTAMP WITH TIME ZONE
+            defaultValueComputed: CURRENT_TIMESTAMP
+        - column:
+            name: updated_date
+            type: TIMESTAMP WITH TIME ZONE
+- changeSet:
+    id: DP-0001-1_09_createTable-inquiry
+    author: daniel
+    changes:
+    - createTable:
+        tableName: inquiry
+        columns:
+        - column:
+            name: id
+            type: BIGINT
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+              primaryKeyName: pk_inquiry
+              nullable: false
+        - column:
+            name: merchant_id
+            type: BIGINT
+            constraints:
+              nullable: false
+              foreignKeyName: fk_inquiry_x_merchant
+              references: merchant(id)
+        - column:
+            name: acquirer_id
+            type: BIGINT
+            constraints:
+              nullable: false
+              foreignKeyName: fk_inquiry_x_acquirer
+              references: acquirer(id)
+        - column:
+            name: register_id
+            type: BIGINT
+            constraints:
+              nullable: false
+              foreignKeyName: fk_inquiry_x_register
+              references: register(id)
+        - column:
+            name: acquirer_request_id
+            type: VARCHAR(128)
+            constraints:
+              nullable: false
+        - column:
+            name: invoice_number
+            type: VARCHAR(64)
+            constraints:
+              nullable: false
+        - column:
+            name: virtual_account_number
+            type: VARCHAR(28)
+            constraints:
+              nullable: false
+        - column:
+            name: virtual_account_name
+            type: VARCHAR(255)
+            constraints:
+              nullable: false
+        - column:
+            name: virtual_account_email
+            type: VARCHAR(255)
+            constraints:
+              nullable: true
+        - column:
+            name: virtual_account_phone
+            type: VARCHAR(30)
+            constraints:
+              nullable: true
+        - column:
+            name: amount
+            type: NUMERIC(16, 2)
+            constraints:
+              nullable: false
+        - column:
+            name: currency
+            type: VARCHAR(3)
+            constraints:
+              nullable: false
+        - column:
+            name: additional_info
+            type: JSONB
+            constraints:
+              nullable: true
+        - column:
+            name: status
+            type: inquiry_status
+            constraints:
+              nullable: false
+        - column:
+            name: created_date
+            type: TIMESTAMP WITH TIME ZONE
+            defaultValueComputed: CURRENT_TIMESTAMP
+        - column:
+            name: updated_date
+            type: TIMESTAMP WITH TIME ZONE
+- changeSet:
+    id: DP-0001-1_10_createTable-payment
+    author: daniel
+    changes:
+    - createTable:
+        tableName: payment
+        columns:
+        - column:
+            name: id
+            type: BIGINT
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+              primaryKeyName: pk_payment
+              nullable: false
+        - column:
+            name: merchant_id
+            type: BIGINT
+            constraints:
+              nullable: false
+              foreignKeyName: fk_payment_x_merchant
+              references: merchant(id)
+        - column:
+            name: acquirer_id
+            type: BIGINT
+            constraints:
+              nullable: false
+              foreignKeyName: fk_payment_x_acquirer
+              references: acquirer(id)
+        - column:
+            name: inquiry_id
+            type: BIGINT
+            constraints:
+              nullable: false
+              foreignKeyName: fk_payment_x_inquiry
+              references: inquiry(id)
+        - column:
+            name: acquirer_request_id
+            type: VARCHAR(128)
+            constraints:
+              nullable: false
+        - column:
+            name: invoice_number
+            type: VARCHAR(64)
+            constraints:
+              nullable: false
+        - column:
+            name: virtual_account_number
+            type: VARCHAR(28)
+            constraints:
+              nullable: false
+        - column:
+            name: virtual_account_name
+            type: VARCHAR(255)
+            constraints:
+              nullable: false
+        - column:
+            name: virtual_account_email
+            type: VARCHAR(255)
+            constraints:
+              nullable: true
+        - column:
+            name: virtual_account_phone
+            type: VARCHAR(30)
+            constraints:
+              nullable: true
+        - column:
+            name: amount
+            type: NUMERIC(16, 2)
+            constraints:
+              nullable: false
+        - column:
+            name: currency
+            type: VARCHAR(3)
+            constraints:
+              nullable: false
+        - column:
+            name: additional_info
+            type: JSONB
+            constraints:
+              nullable: true
+        - column:
+            name: status
+            type: payment_status
+            constraints:
+              nullable: false
+        - column:
+            name: created_date
+            type: TIMESTAMP WITH TIME ZONE
+            defaultValueComputed: CURRENT_TIMESTAMP
+        - column:
+            name: updated_date
+            type: TIMESTAMP WITH TIME ZONE
+- changeSet:
+    id: DP-0001-1_11_insert-acquirer
+    author: daniel
+    changes:
+    - sqlFile:
+        path: db/data/DP-0001-1/DP-0001-1_11_insert-acquirer.sql
+        encoding: utf-8
+        splitStatements: false
+        stripComments: true
+    rollback:
+    - sqlFile:
+        path: db/data/DP-0001-1/DP-0001-1_11_insert-acquirer_ROLLBACK.sql
+        splitStatements: false
+- changeSet:
+    id: DP-0001-1_12_insert-merchant
+    author: daniel
+    changes:
+    - sqlFile:
+        path: db/data/DP-0001-1/DP-0001-1_12_insert-merchant.sql
+        encoding: utf-8
+        splitStatements: false
+        stripComments: true
+    rollback:
+    - sqlFile:
+        path: db/data/DP-0001-1/DP-0001-1_12_insert-merchant_ROLLBACK.sql
+        splitStatements: false

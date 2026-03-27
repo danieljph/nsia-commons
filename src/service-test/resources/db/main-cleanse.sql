@@ -1,0 +1,1 @@
+-- Put SQL needed by all Service-Test here.
